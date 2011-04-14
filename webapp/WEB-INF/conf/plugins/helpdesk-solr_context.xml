@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+    
+  <!--                      Search Engine                    -->  
+  <bean id="helpdeskSolrIndexer" class="fr.paris.lutece.plugins.helpdesk.modules.solr.search.SolrHelpdeskIndexer" />
+  
+</beans>
