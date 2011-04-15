@@ -73,9 +73,26 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     private static final String PROPERTY_INDEXER_ENABLE = "helpdesk-solr.indexer.enable";
     public static final String SHORT_NAME_SUBJECT = "hds";
     public static final String SHORT_NAME_QUESTION_ANSWER = "hdq";
-    private static final String SITE = AppPropertiesService.getProperty( "lutece.name" );
     private static final String BLANK = " ";
     private static final String PROPERTY_PAGE_PATH_LABEL = "helpdesk.pagePathLabel";
+
+    // Site name
+    private static final String PROPERTY_SITE = "lutece.name";
+    private static final String PROPERTY_PROD_URL = "lutece.prod.url";
+    private String _strSite;
+    private String _strProdUrl;
+
+    public SolrHelpdeskIndexer(  )
+    {
+        super(  );
+        _strSite = AppPropertiesService.getProperty( PROPERTY_SITE );
+        _strProdUrl = AppPropertiesService.getProperty( PROPERTY_PROD_URL );
+
+        if ( !_strProdUrl.endsWith( "/" ) )
+        {
+            _strProdUrl = _strProdUrl + "/";
+        }
+    }
 
     public String getDescription(  )
     {
@@ -131,7 +148,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         String strPortalUrl = AppPathService.getPortalUrl(  );
         Plugin plugin = PluginService.getPlugin( HelpdeskPlugin.PLUGIN_NAME );
 
-        UrlItem urlSubject = new UrlItem( strPortalUrl );
+        UrlItem urlSubject = new UrlItem( _strProdUrl + strPortalUrl );
         urlSubject.addParameter( XPageAppService.PARAM_XPAGE_APP,
             AppPropertiesService.getProperty( PROPERTY_PAGE_PATH_LABEL ) ); //FIXME
         urlSubject.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
@@ -145,7 +162,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         {
             if ( questionAnswer.isEnabled(  ) )
             {
-                UrlItem urlQuestionAnswer = new UrlItem( strPortalUrl );
+                UrlItem urlQuestionAnswer = new UrlItem( _strProdUrl + strPortalUrl );
                 urlQuestionAnswer.addParameter( XPageAppService.PARAM_XPAGE_APP,
                     AppPropertiesService.getProperty( PROPERTY_PAGE_PATH_LABEL ) ); //FIXME
                 urlQuestionAnswer.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
@@ -227,7 +244,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         item.setTitle( questionAnswer.getQuestion(  ) );
 
         // Setting the Site field
-        item.setSite( SITE );
+        item.setSite( _strSite );
 
         // Setting the Type field
         item.setType( HelpdeskPlugin.PLUGIN_NAME );
@@ -280,7 +297,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         item.setTitle( subject.getText(  ) );
 
         // Setting the Site field
-        item.setSite( SITE );
+        item.setSite( _strSite );
 
         // Setting the Type field
         item.setType( HelpdeskPlugin.PLUGIN_NAME );
