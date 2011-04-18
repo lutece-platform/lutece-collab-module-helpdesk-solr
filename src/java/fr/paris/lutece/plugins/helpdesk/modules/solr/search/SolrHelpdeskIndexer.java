@@ -41,13 +41,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.lucene.demo.html.HTMLParser;
+
 import fr.paris.lutece.plugins.helpdesk.business.Faq;
 import fr.paris.lutece.plugins.helpdesk.business.FaqHome;
 import fr.paris.lutece.plugins.helpdesk.business.QuestionAnswer;
 import fr.paris.lutece.plugins.helpdesk.business.Subject;
 import fr.paris.lutece.plugins.helpdesk.business.SubjectHome;
 import fr.paris.lutece.plugins.helpdesk.service.HelpdeskPlugin;
+import fr.paris.lutece.plugins.helpdesk.service.helpdesksearch.HelpdeskSearchItem;
 import fr.paris.lutece.plugins.helpdesk.web.HelpdeskApp;
 import fr.paris.lutece.plugins.search.solr.business.field.Field;
 import fr.paris.lutece.plugins.search.solr.indexer.SolrIndexer;
@@ -75,6 +78,11 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     public static final String SHORT_NAME_QUESTION_ANSWER = "hdq";
     private static final String BLANK = " ";
     private static final String PROPERTY_PAGE_PATH_LABEL = "helpdesk.pagePathLabel";
+    
+    private static final String PROPERTY_FAQ_ID_LABEL = "helpdesk-solr.indexer.faq_id.label";
+    private static final String PROPERTY_FAQ_ID_DESCRIPTION = "helpdesk-solr.indexer.faq_id.description";
+    private static final String PROPERTY_SUBJECT_LABEL = "helpdesk-solr.indexer.subject.label";
+    private static final String PROPERTY_SUBJECT_DESCRIPTION = "helpdesk-solr.indexer.subject.description";
 
     // Site name
     private static final String PROPERTY_SITE = "lutece.name";
@@ -204,7 +212,22 @@ public class SolrHelpdeskIndexer implements SolrIndexer
 
     public List<Field> getAdditionalFields(  )
     {
-        return new ArrayList<Field>(  );
+        List<Field> fields = new ArrayList<Field>(  );
+        Field fieldFaqId = new Field(  );
+        fieldFaqId.setEnableFacet( false );
+        fieldFaqId.setName( HelpdeskSearchItem.FIELD_FAQ_ID );
+        fieldFaqId.setLabel( AppPropertiesService.getProperty( PROPERTY_FAQ_ID_LABEL ) );
+        fieldFaqId.setDescription( AppPropertiesService.getProperty( PROPERTY_FAQ_ID_DESCRIPTION ) );
+        fields.add( fieldFaqId );
+        
+        Field fieldSubjectId = new Field(  );
+        fieldSubjectId.setEnableFacet( true );
+        fieldSubjectId.setName( HelpdeskSearchItem.FIELD_SUBJECT );
+        fieldSubjectId.setLabel( AppPropertiesService.getProperty( PROPERTY_SUBJECT_LABEL ) );
+        fieldSubjectId.setDescription( AppPropertiesService.getProperty( PROPERTY_SUBJECT_DESCRIPTION ) );
+        fields.add( fieldSubjectId );
+
+        return fields;
     }
 
     /**
@@ -275,9 +298,8 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         // make a new, empty document
         SolrItem item = new SolrItem(  );
 
-        //FIXME
-        //        doc.add( new Field( HelpdeskSearchItem.FIELD_FAQ_ID, String.valueOf( nIdFaq ), Field.Store.YES,
-        //                Field.Index.UN_TOKENIZED ) );
+        // Setting the Id faq field
+        item.addDynamicField(HelpdeskSearchItem.FIELD_FAQ_ID, String.valueOf( nIdFaq ));
 
         // Setting the Role field
         item.setRole( strRoleKey );
@@ -285,9 +307,8 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         // Setting the URL field
         item.setUrl( strUrl );
 
-        //FIXME
-        //        doc.add( new Field( HelpdeskSearchItem.FIELD_SUBJECT, String.valueOf( questionAnswer.getIdSubject(  ) ),
-        //                Field.Store.YES, Field.Index.UN_TOKENIZED ) );
+        // Setting the subject field
+        item.addDynamicField(HelpdeskSearchItem.FIELD_SUBJECT, String.valueOf( questionAnswer.getIdSubject(  ) ));
 
         // Setting the Uid field
         String strIdQuestionAnswer = String.valueOf( questionAnswer.getIdQuestionAnswer(  ) );
