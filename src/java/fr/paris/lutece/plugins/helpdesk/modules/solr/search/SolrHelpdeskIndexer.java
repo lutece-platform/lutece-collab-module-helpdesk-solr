@@ -134,6 +134,80 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     }
 
     /**
+     * Get the subject document
+     * @param strDocument id of the subject to index
+     * @return The list of Solr items
+     * @throws IOException the exception
+     */
+    public List<SolrItem> getDocuments( String strDocument )
+        throws IOException
+    {
+        List<SolrItem> listDocs = new ArrayList<SolrItem>(  );
+        String strPortalUrl = AppPathService.getPortalUrl(  );
+        Plugin plugin = PluginService.getPlugin( HelpdeskPlugin.PLUGIN_NAME );
+
+        Subject subject = (Subject) SubjectHome.getInstance(  ).findByPrimaryKey( Integer.parseInt( strDocument ),
+                plugin );
+
+        if ( subject != null )
+        {
+            UrlItem urlSubject = new UrlItem( strPortalUrl );
+            urlSubject.addParameter( XPageAppService.PARAM_XPAGE_APP,
+                AppPropertiesService.getProperty( PROPERTY_PAGE_PATH_LABEL ) ); //FIXME
+
+            //if it's a sub-subject, we need to get the first parent to have the faq
+            int nIdParent = subject.getIdParent(  );
+            Subject parentSubject = subject;
+
+            while ( nIdParent != SubjectHome.FIRST_ORDER )
+            {
+                parentSubject = (Subject) SubjectHome.getInstance(  ).findByPrimaryKey( nIdParent, plugin );
+                nIdParent = parentSubject.getIdParent(  );
+            }
+
+            Faq faq = FaqHome.findBySubjectId( parentSubject.getId(  ), plugin );
+
+            if ( faq != null )
+            {
+                urlSubject.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
+                urlSubject.setAnchor( HelpdeskApp.ANCHOR_SUBJECT + subject.getId(  ) );
+
+                SolrItem docSubject = getDocument( subject, faq.getRoleKey(  ), urlSubject.getUrl(  ), plugin );
+                listDocs.add( docSubject );
+
+                for ( QuestionAnswer questionAnswer : (List<QuestionAnswer>) subject.getQuestions(  ) )
+                {
+                    if ( questionAnswer.isEnabled(  ) )
+                    {
+                        UrlItem urlQuestionAnswer = new UrlItem( strPortalUrl );
+                        urlQuestionAnswer.addParameter( XPageAppService.PARAM_XPAGE_APP,
+                            AppPropertiesService.getProperty( PROPERTY_PAGE_PATH_LABEL ) ); //FIXME
+                        urlQuestionAnswer.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
+                        urlQuestionAnswer.setAnchor( HelpdeskApp.ANCHOR_QUESTION_ANSWER +
+                            questionAnswer.getIdQuestionAnswer(  ) );
+
+                        SolrItem docQuestionAnswer = getDocument( faq.getId(  ), questionAnswer,
+                                urlQuestionAnswer.getUrl(  ), faq.getRoleKey(  ), plugin );
+                        listDocs.add( docQuestionAnswer );
+                    }
+                }
+            }
+        }
+
+        return listDocs;
+    }
+
+    public boolean isEnable(  )
+    {
+        return "true".equalsIgnoreCase( AppPropertiesService.getProperty( PROPERTY_INDEXER_ENABLE ) );
+    }
+
+    public List<Field> getAdditionalFields(  )
+    {
+        return new ArrayList<Field>(  );
+    }
+
+    /**
      * Recursive method for indexing a subject and his children
      *
      * @param items The items map
@@ -324,16 +398,6 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         sbContentToIndex.append( questionAnswer.getAnswer(  ) );
 
         return sbContentToIndex.toString(  );
-    }
-
-    public boolean isEnable(  )
-    {
-        return "true".equalsIgnoreCase( AppPropertiesService.getProperty( PROPERTY_INDEXER_ENABLE ) );
-    }
-
-    public List<Field> getAdditionalFields(  )
-    {
-        return new ArrayList<Field>(  );
     }
 
     /**
