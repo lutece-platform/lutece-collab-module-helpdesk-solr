@@ -33,17 +33,6 @@
  */
 package fr.paris.lutece.plugins.helpdesk.modules.solr.search;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.lucene.demo.html.HTMLParser;
-
 import fr.paris.lutece.plugins.helpdesk.business.Faq;
 import fr.paris.lutece.plugins.helpdesk.business.FaqHome;
 import fr.paris.lutece.plugins.helpdesk.business.QuestionAnswer;
@@ -51,17 +40,33 @@ import fr.paris.lutece.plugins.helpdesk.business.Subject;
 import fr.paris.lutece.plugins.helpdesk.business.SubjectHome;
 import fr.paris.lutece.plugins.helpdesk.service.HelpdeskPlugin;
 import fr.paris.lutece.plugins.helpdesk.service.helpdesksearch.HelpdeskSearchItem;
+import fr.paris.lutece.plugins.helpdesk.utils.HelpdeskIndexerUtils;
 import fr.paris.lutece.plugins.helpdesk.web.HelpdeskApp;
 import fr.paris.lutece.plugins.search.solr.business.field.Field;
 import fr.paris.lutece.plugins.search.solr.indexer.SolrIndexer;
+import fr.paris.lutece.plugins.search.solr.indexer.SolrIndexerService;
 import fr.paris.lutece.plugins.search.solr.indexer.SolrItem;
+import fr.paris.lutece.plugins.search.solr.util.SolrConstants;
 import fr.paris.lutece.portal.service.content.XPageAppService;
+import fr.paris.lutece.portal.service.message.SiteMessageException;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPathService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.url.UrlItem;
+
+import org.apache.commons.lang.StringUtils;
+
+import org.apache.lucene.demo.html.HTMLParser;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 
 /**
@@ -78,7 +83,6 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     public static final String SHORT_NAME_QUESTION_ANSWER = "hdq";
     private static final String BLANK = " ";
     private static final String PROPERTY_PAGE_PATH_LABEL = "helpdesk.pagePathLabel";
-    
     private static final String PROPERTY_FAQ_ID_LABEL = "helpdesk-solr.indexer.faq_id.label";
     private static final String PROPERTY_FAQ_ID_DESCRIPTION = "helpdesk-solr.indexer.faq_id.description";
     private static final String PROPERTY_SUBJECT_LABEL = "helpdesk-solr.indexer.subject.label";
@@ -87,6 +91,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     // Site name
     private static final String PROPERTY_SITE = "lutece.name";
     private static final String PROPERTY_PROD_URL = "lutece.prod.url";
+    private static final List<String> LIST_RESSOURCES_NAME = new ArrayList<String>(  );
     private String _strSite;
     private String _strProdUrl;
 
@@ -100,26 +105,40 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         {
             _strProdUrl = _strProdUrl + "/";
         }
+
+        LIST_RESSOURCES_NAME.add( HelpdeskIndexerUtils.CONSTANT_QUESTION_ANSWER_TYPE_RESOURCE );
+        LIST_RESSOURCES_NAME.add( HelpdeskIndexerUtils.CONSTANT_SUBJECT_TYPE_RESOURCE );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getDescription(  )
     {
         return AppPropertiesService.getProperty( PROPERTY_DESCRIPTION );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getName(  )
     {
         return AppPropertiesService.getProperty( PROPERTY_NAME );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getVersion(  )
     {
         return AppPropertiesService.getProperty( PROPERTY_VERSION );
     }
 
-    public Map<String, SolrItem> index(  )
+    /**
+     * {@inheritDoc}
+     */
+    public void indexDocuments(  ) throws IOException, InterruptedException, SiteMessageException
     {
-        Map<String, SolrItem> items = new HashMap<String, SolrItem>(  );
         Plugin plugin = PluginService.getPlugin( HelpdeskPlugin.PLUGIN_NAME );
 
         //FAQ
@@ -129,7 +148,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
             {
                 try
                 {
-                    indexSubject( items, faq, subject );
+                    indexSubject( faq, subject );
                 }
                 catch ( IOException e )
                 {
@@ -137,18 +156,14 @@ public class SolrHelpdeskIndexer implements SolrIndexer
                 }
             }
         }
-
-        return items;
     }
 
     /**
      * Get the subject document
      * @param strDocument id of the subject to index
      * @return The list of Solr items
-     * @throws IOException the exception
      */
     public List<SolrItem> getDocuments( String strDocument )
-        throws IOException
     {
         List<SolrItem> listDocs = new ArrayList<SolrItem>(  );
         String strPortalUrl = AppPathService.getPortalUrl(  );
@@ -180,24 +195,34 @@ public class SolrHelpdeskIndexer implements SolrIndexer
                 urlSubject.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
                 urlSubject.setAnchor( HelpdeskApp.ANCHOR_SUBJECT + subject.getId(  ) );
 
-                SolrItem docSubject = getDocument( subject, faq.getRoleKey(  ), urlSubject.getUrl(  ), plugin );
-                listDocs.add( docSubject );
+                SolrItem docSubject;
 
-                for ( QuestionAnswer questionAnswer : (List<QuestionAnswer>) subject.getQuestions(  ) )
+                try
                 {
-                    if ( questionAnswer.isEnabled(  ) )
-                    {
-                        UrlItem urlQuestionAnswer = new UrlItem( strPortalUrl );
-                        urlQuestionAnswer.addParameter( XPageAppService.PARAM_XPAGE_APP,
-                            AppPropertiesService.getProperty( PROPERTY_PAGE_PATH_LABEL ) ); //FIXME
-                        urlQuestionAnswer.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
-                        urlQuestionAnswer.setAnchor( HelpdeskApp.ANCHOR_QUESTION_ANSWER +
-                            questionAnswer.getIdQuestionAnswer(  ) );
+                    docSubject = getDocument( subject, faq.getRoleKey(  ), urlSubject.getUrl(  ), plugin );
 
-                        SolrItem docQuestionAnswer = getDocument( faq.getId(  ), questionAnswer,
-                                urlQuestionAnswer.getUrl(  ), faq.getRoleKey(  ), plugin );
-                        listDocs.add( docQuestionAnswer );
+                    listDocs.add( docSubject );
+
+                    for ( QuestionAnswer questionAnswer : (List<QuestionAnswer>) subject.getQuestions(  ) )
+                    {
+                        if ( questionAnswer.isEnabled(  ) )
+                        {
+                            UrlItem urlQuestionAnswer = new UrlItem( strPortalUrl );
+                            urlQuestionAnswer.addParameter( XPageAppService.PARAM_XPAGE_APP,
+                                AppPropertiesService.getProperty( PROPERTY_PAGE_PATH_LABEL ) ); //FIXME
+                            urlQuestionAnswer.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
+                            urlQuestionAnswer.setAnchor( HelpdeskApp.ANCHOR_QUESTION_ANSWER +
+                                questionAnswer.getIdQuestionAnswer(  ) );
+
+                            SolrItem docQuestionAnswer = getDocument( faq.getId(  ), questionAnswer,
+                                    urlQuestionAnswer.getUrl(  ), faq.getRoleKey(  ), plugin );
+                            listDocs.add( docQuestionAnswer );
+                        }
                     }
+                }
+                catch ( IOException e )
+                {
+                    throw new RuntimeException( e );
                 }
             }
         }
@@ -205,11 +230,17 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         return listDocs;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isEnable(  )
     {
         return "true".equalsIgnoreCase( AppPropertiesService.getProperty( PROPERTY_INDEXER_ENABLE ) );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public List<Field> getAdditionalFields(  )
     {
         List<Field> fields = new ArrayList<Field>(  );
@@ -219,7 +250,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         fieldFaqId.setLabel( AppPropertiesService.getProperty( PROPERTY_FAQ_ID_LABEL ) );
         fieldFaqId.setDescription( AppPropertiesService.getProperty( PROPERTY_FAQ_ID_DESCRIPTION ) );
         fields.add( fieldFaqId );
-        
+
         Field fieldSubjectId = new Field(  );
         fieldSubjectId.setEnableFacet( true );
         fieldSubjectId.setName( HelpdeskSearchItem.FIELD_SUBJECT );
@@ -233,13 +264,12 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * Recursive method for indexing a subject and his children
      *
-     * @param items The items map
      * @param faq the faq linked to the subject
      * @param subject the subject
      * @throws IOException I/O Exception
      * @throws InterruptedException interruptedException
      */
-    private void indexSubject( Map<String, SolrItem> items, Faq faq, Subject subject )
+    private void indexSubject( Faq faq, Subject subject )
         throws IOException
     {
         String strPortalUrl = AppPathService.getPortalUrl(  );
@@ -253,7 +283,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
 
         // Indexing the subject
         SolrItem itemSubject = getDocument( subject, faq.getRoleKey(  ), urlSubject.getUrl(  ), plugin );
-        items.put( getLog( itemSubject ), itemSubject );
+        SolrIndexerService.write( itemSubject );
 
         for ( QuestionAnswer questionAnswer : (List<QuestionAnswer>) subject.getQuestions(  ) )
         {
@@ -269,7 +299,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
                 // Indexing the questionAnswer
                 SolrItem itemQuestionAnswer = getDocument( faq.getId(  ), questionAnswer, urlQuestionAnswer.getUrl(  ),
                         faq.getRoleKey(  ), plugin );
-                items.put( getLog( itemQuestionAnswer ), itemQuestionAnswer );
+                SolrIndexerService.write( itemQuestionAnswer );
             }
         }
 
@@ -277,7 +307,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
 
         for ( Subject childSubject : children )
         {
-            indexSubject( items, faq, childSubject );
+            indexSubject( faq, childSubject );
         }
     }
 
@@ -299,7 +329,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         SolrItem item = new SolrItem(  );
 
         // Setting the Id faq field
-        item.addDynamicField(HelpdeskSearchItem.FIELD_FAQ_ID, String.valueOf( nIdFaq ));
+        item.addDynamicField( HelpdeskSearchItem.FIELD_FAQ_ID, String.valueOf( nIdFaq ) );
 
         // Setting the Role field
         item.setRole( strRoleKey );
@@ -308,11 +338,11 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         item.setUrl( strUrl );
 
         // Setting the subject field
-        item.addDynamicField(HelpdeskSearchItem.FIELD_SUBJECT, String.valueOf( questionAnswer.getIdSubject(  ) ));
+        item.addDynamicField( HelpdeskSearchItem.FIELD_SUBJECT, String.valueOf( questionAnswer.getIdSubject(  ) ) );
 
         // Setting the Uid field
         String strIdQuestionAnswer = String.valueOf( questionAnswer.getIdQuestionAnswer(  ) );
-        item.setUid( strIdQuestionAnswer + "_" + SHORT_NAME_QUESTION_ANSWER );
+        item.setUid( getResourceUid( strIdQuestionAnswer, HelpdeskIndexerUtils.CONSTANT_QUESTION_ANSWER_TYPE_RESOURCE ) );
 
         // Setting the Date field
         // Add the last modified date of the file a field named "modified".
@@ -369,7 +399,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
 
         // Setting the Uid field
         String strIdSubject = String.valueOf( subject.getId(  ) );
-        item.setUid( strIdSubject + "_" + SHORT_NAME_SUBJECT );
+        item.setUid( getResourceUid( strIdSubject, HelpdeskIndexerUtils.CONSTANT_SUBJECT_TYPE_RESOURCE ) );
 
         //Setting the Content field
         String strContentToIndex = subject.getText(  );
@@ -422,21 +452,29 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     }
 
     /**
-     * Generate the log line for the specified {@link SolrItem}
-     * @param item The {@link SolrItem}
-     * @return The string representing the log line
-     */
-    private String getLog( SolrItem item )
+         * {@inheritDoc}
+         */
+    public List<String> getResourcesName(  )
     {
-        StringBuilder sbLogs = new StringBuilder(  );
-        sbLogs.append( "indexing " );
-        sbLogs.append( item.getType(  ) );
-        sbLogs.append( " id : " );
-        sbLogs.append( item.getUid(  ) );
-        sbLogs.append( " Title : " );
-        sbLogs.append( item.getTitle(  ) );
-        sbLogs.append( "<br/>" );
+        return LIST_RESSOURCES_NAME;
+    }
 
-        return sbLogs.toString(  );
+    /**
+     * {@inheritDoc}
+     */
+    public String getResourceUid( String strResourceId, String strResourceType )
+    {
+        StringBuffer sb = new StringBuffer(  );
+
+        if ( HelpdeskIndexerUtils.CONSTANT_QUESTION_ANSWER_TYPE_RESOURCE.equals( strResourceType ) )
+        {
+            sb.append( strResourceId ).append( SolrConstants.CONSTANT_UNDERSCORE ).append( SHORT_NAME_QUESTION_ANSWER );
+        }
+        else if ( HelpdeskIndexerUtils.CONSTANT_SUBJECT_TYPE_RESOURCE.equals( strResourceType ) )
+        {
+            sb.append( strResourceId ).append( SolrConstants.CONSTANT_UNDERSCORE ).append( SHORT_NAME_SUBJECT );
+        }
+
+        return StringUtils.isNotBlank( sb.toString(  ) ) ? sb.toString(  ) : null;
     }
 }
