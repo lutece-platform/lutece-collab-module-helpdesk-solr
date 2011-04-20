@@ -34,7 +34,6 @@
 package fr.paris.lutece.plugins.helpdesk.modules.solr.service;
 
 
-
 /**
  *
  * HelpdeskSolrService
@@ -50,7 +49,7 @@ public class HelpdeskSolrService
     */
     public void init(  )
     {
-    	//TODO subscribe to SolrService
+        //TODO subscribe to SolrService
     }
 
     /**
