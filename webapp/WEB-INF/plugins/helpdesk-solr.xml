@@ -10,8 +10,8 @@
     <installation></installation>
     <changes></changes>
     <user-guide></user-guide>
-    <description>helpdesk-solr.plugin.description</description>
-    <provider>helpdesk-solr.plugin.provider</provider>
+    <description>module.helpdesk.solr.module.description</description>
+    <provider>module.helpdesk.solr.module.provider</provider>
     <provider-url>http://lutece.paris.fr</provider-url>
     <icon-url>images/admin/skin/plugins/helpdesk/modules/solr/helpdesk-solr.png</icon-url>
     <copyright>Copyright 2001-2011 Mairie de Paris</copyright>
