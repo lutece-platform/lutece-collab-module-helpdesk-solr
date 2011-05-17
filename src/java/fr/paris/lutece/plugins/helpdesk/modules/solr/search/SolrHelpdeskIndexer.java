@@ -89,23 +89,11 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     private static final String PROPERTY_SUBJECT_DESCRIPTION = "helpdesk-solr.indexer.subject.description";
 
     // Site name
-    private static final String PROPERTY_SITE = "lutece.name";
-    private static final String PROPERTY_PROD_URL = "lutece.prod.url";
     private static final List<String> LIST_RESSOURCES_NAME = new ArrayList<String>(  );
-    private String _strSite;
-    private String _strProdUrl;
 
     public SolrHelpdeskIndexer(  )
     {
         super(  );
-        _strSite = AppPropertiesService.getProperty( PROPERTY_SITE );
-        _strProdUrl = AppPropertiesService.getProperty( PROPERTY_PROD_URL );
-
-        if ( !_strProdUrl.endsWith( "/" ) )
-        {
-            _strProdUrl = _strProdUrl + "/";
-        }
-
         LIST_RESSOURCES_NAME.add( HelpdeskIndexerUtils.CONSTANT_QUESTION_ANSWER_TYPE_RESOURCE );
         LIST_RESSOURCES_NAME.add( HelpdeskIndexerUtils.CONSTANT_SUBJECT_TYPE_RESOURCE );
     }
@@ -166,7 +154,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     public List<SolrItem> getDocuments( String strDocument )
     {
         List<SolrItem> listDocs = new ArrayList<SolrItem>(  );
-        String strPortalUrl = AppPathService.getPortalUrl(  );
+        String strPortalUrl = SolrIndexerService.getBaseUrl(  );
         Plugin plugin = PluginService.getPlugin( HelpdeskPlugin.PLUGIN_NAME );
 
         Subject subject = (Subject) SubjectHome.getInstance(  ).findByPrimaryKey( Integer.parseInt( strDocument ),
@@ -272,10 +260,10 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     private void indexSubject( Faq faq, Subject subject )
         throws IOException
     {
-        String strPortalUrl = AppPathService.getPortalUrl(  );
         Plugin plugin = PluginService.getPlugin( HelpdeskPlugin.PLUGIN_NAME );
 
-        UrlItem urlSubject = new UrlItem( _strProdUrl + strPortalUrl );
+        String strWebappName = SolrIndexerService.getBaseUrl(  );
+        UrlItem urlSubject = new UrlItem( strWebappName );
         urlSubject.addParameter( XPageAppService.PARAM_XPAGE_APP,
             AppPropertiesService.getProperty( PROPERTY_PAGE_PATH_LABEL ) ); //FIXME
         urlSubject.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
@@ -289,7 +277,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         {
             if ( questionAnswer.isEnabled(  ) )
             {
-                UrlItem urlQuestionAnswer = new UrlItem( _strProdUrl + strPortalUrl );
+                UrlItem urlQuestionAnswer = new UrlItem( strWebappName );
                 urlQuestionAnswer.addParameter( XPageAppService.PARAM_XPAGE_APP,
                     AppPropertiesService.getProperty( PROPERTY_PAGE_PATH_LABEL ) ); //FIXME
                 urlQuestionAnswer.addParameter( HelpdeskApp.PARAMETER_FAQ_ID, faq.getId(  ) );
@@ -369,7 +357,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         item.setTitle( questionAnswer.getQuestion(  ) );
 
         // Setting the Site field
-        item.setSite( _strSite );
+        item.setSite( SolrIndexerService.getWebAppName(  ) );
 
         // Setting the Type field
         item.setType( HelpdeskPlugin.PLUGIN_NAME );
@@ -422,7 +410,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         item.setTitle( subject.getText(  ) );
 
         // Setting the Site field
-        item.setSite( _strSite );
+        item.setSite( SolrIndexerService.getWebAppName(  ) );
 
         // Setting the Type field
         item.setType( HelpdeskPlugin.PLUGIN_NAME );
