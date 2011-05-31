@@ -33,6 +33,16 @@
  */
 package fr.paris.lutece.plugins.helpdesk.modules.solr.search;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.demo.html.HTMLParser;
+
 import fr.paris.lutece.plugins.helpdesk.business.Faq;
 import fr.paris.lutece.plugins.helpdesk.business.FaqHome;
 import fr.paris.lutece.plugins.helpdesk.business.QuestionAnswer;
@@ -48,25 +58,11 @@ import fr.paris.lutece.plugins.search.solr.indexer.SolrIndexerService;
 import fr.paris.lutece.plugins.search.solr.indexer.SolrItem;
 import fr.paris.lutece.plugins.search.solr.util.SolrConstants;
 import fr.paris.lutece.portal.service.content.XPageAppService;
-import fr.paris.lutece.portal.service.message.SiteMessageException;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
 import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.portal.service.util.AppPathService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.url.UrlItem;
-
-import org.apache.commons.lang.StringUtils;
-
-import org.apache.lucene.demo.html.HTMLParser;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 
 /**
@@ -90,7 +86,8 @@ public class SolrHelpdeskIndexer implements SolrIndexer
 
     // Site name
     private static final List<String> LIST_RESSOURCES_NAME = new ArrayList<String>(  );
-
+    private static final String SUBJECT_INDEXATION_ERROR = "An error occured during the indexation of the subject number ";
+    
     public SolrHelpdeskIndexer(  )
     {
         super(  );
@@ -125,25 +122,29 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * {@inheritDoc}
      */
-    public void indexDocuments(  ) throws IOException, InterruptedException, SiteMessageException
+    public List<String> indexDocuments(  )
     {
         Plugin plugin = PluginService.getPlugin( HelpdeskPlugin.PLUGIN_NAME );
-
+        List<String> lstErrors = new ArrayList<String>(  );
+        
         //FAQ
         for ( Faq faq : FaqHome.findAll( plugin ) )
         {
-            for ( Subject subject : (Collection<Subject>) SubjectHome.getInstance(  ).findByIdFaq( faq.getId(  ), plugin ) )
-            {
-                try
-                {
-                    indexSubject( faq, subject );
-                }
-                catch ( IOException e )
-                {
-                    AppLogService.error( e );
-                }
-            }
+        	for ( Subject subject : (Collection<Subject>) SubjectHome.getInstance(  ).findByIdFaq( faq.getId(  ), plugin ) )
+        	{
+        		try
+        		{
+        			indexSubject( faq, subject );
+        		}
+        		catch ( IOException e )
+        		{
+        			lstErrors.add( SolrIndexerService.buildErrorMessage( e ) );
+        			AppLogService.error( SUBJECT_INDEXATION_ERROR + subject.getId(  ), e );
+        		}
+        	}
         }
+        
+        return lstErrors;
     }
 
     /**
