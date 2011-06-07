@@ -1,15 +1,13 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-
-<plug-in>
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?><plug-in>
     
     <!-- Plugin Informations -->
     <name>helpdesk-solr</name>
     <class>fr.paris.lutece.plugins.helpdesk.modules.solr.service.HelpdeskSolrPlugin</class>
-    <version>1.0.0-SNAPSHOT</version>
-    <documentation></documentation>
-    <installation></installation>
-    <changes></changes>
-    <user-guide></user-guide>
+    <version>1.0.0</version>
+    <documentation/>
+    <installation/>
+    <changes/>
+    <user-guide/>
     <description>module.helpdesk.solr.module.description</description>
     <provider>module.helpdesk.solr.module.provider</provider>
     <provider-url>http://lutece.paris.fr</provider-url>
@@ -17,7 +15,7 @@
     <copyright>Copyright 2001-2011 Mairie de Paris</copyright>
 	<core-version-dependency>
 		<min-core-version>2.9.9</min-core-version>
-		<max-core-version></max-core-version>	
+		<max-core-version/>	
 	</core-version-dependency>
     
     <!-- if the plugin must have a connection pool with parameter : 1 - yes, 0 - no -->
