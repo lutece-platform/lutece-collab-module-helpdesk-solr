@@ -34,19 +34,19 @@
 		<dependency>
 			<groupId>fr.paris.lutece</groupId>
 			<artifactId>lutece-core</artifactId>
-			<version>3.0.0-SNAPSHOT</version>
+			<version>[3.0.0,4.0.0-SNAPSHOT)</version>
 			<type>lutece-core</type>
 		</dependency>
 		<dependency>
 			<groupId>fr.paris.lutece.plugins</groupId>
 			<artifactId>plugin-helpdesk</artifactId>
-			<version>2.1.4-SNAPSHOT</version>
+			<version>[2.1.3,3.0.0-SNAPSHOT)</version>
 			<type>lutece-plugin</type>
 		</dependency>
 		<dependency>
 			<groupId>fr.paris.lutece.plugins</groupId>
 			<artifactId>plugin-solr</artifactId>
-			<version>2.1.2-SNAPSHOT</version>
+			<version>[2.1.1,3.0.0-SNAPSHOT)</version>
 			<type>lutece-plugin</type>
 		</dependency>
 	</dependencies>
