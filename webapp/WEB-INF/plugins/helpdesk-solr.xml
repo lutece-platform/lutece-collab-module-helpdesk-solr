@@ -3,7 +3,7 @@
     <!-- Plugin Informations -->
     <name>helpdesk-solr</name>
     <class>fr.paris.lutece.plugins.helpdesk.modules.solr.service.HelpdeskSolrPlugin</class>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <documentation/>
     <installation/>
     <changes/>
