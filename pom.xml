@@ -1,64 +1,66 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<parent>
-	  <artifactId>lutece-plugins-pom</artifactId>
-	  <groupId>fr.paris.lutece.plugins</groupId>
-	  <version>3.7</version>
-	</parent>
+    <parent>
+        <artifactId>lutece-global-pom</artifactId>
+        <groupId>fr.paris.lutece.tools</groupId>
+        <version>3.0</version>
+    </parent>
 
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>fr.paris.lutece.plugins</groupId>
-	<artifactId>module-helpdesk-solr</artifactId>
-	<packaging>lutece-plugin</packaging>
-	<version>1.0.2-SNAPSHOT</version>
-	<name>Module helpdesk Solr</name>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>fr.paris.lutece.plugins</groupId>
+    <artifactId>module-helpdesk-solr</artifactId>
+    <packaging>lutece-plugin</packaging>
+    <version>1.0.2-SNAPSHOT</version>
+    <name>Lutece helpdesk solr module</name>
 
-	<repositories>
-		<repository>
-		    <id>lutece</id>
-		    <name>luteceRepository</name>
-		    <url>http://dev.lutece.paris.fr/maven_repository</url>
-		    <layout>default</layout>
-	  	</repository>
-	  	<repository>
-	      	<id>luteceSnapshot</id>
-	        <name>luteceSnapshot</name>
-	        <url>http://dev.lutece.paris.fr/snapshot_repository</url>
-	       	<snapshots>
-	           	<enabled>true</enabled>
-	        </snapshots>
-    	</repository>
-	</repositories>
+    <repositories>
+        <repository>
+            <id>lutece</id>
+            <name>luteceRepository</name>
+            <url>http://dev.lutece.paris.fr/maven_repository</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
+            <id>luteceSnapshot</id>
+            <name>luteceSnapshot</name>
+            <url>http://dev.lutece.paris.fr/snapshot_repository</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
-	<dependencies>
-		<dependency>
-			<groupId>fr.paris.lutece</groupId>
-			<artifactId>lutece-core</artifactId>
-			<version>[3.0.0,)</version>
-			<type>lutece-core</type>
-		</dependency>
-		<dependency>
-			<groupId>fr.paris.lutece.plugins</groupId>
-			<artifactId>plugin-helpdesk</artifactId>
-			<version>[2.1.3,3.0.0-SNAPSHOT)</version>
-			<type>lutece-plugin</type>
-		</dependency>
-		<dependency>
-			<groupId>fr.paris.lutece.plugins</groupId>
-			<artifactId>plugin-solr</artifactId>
-			<version>[2.1.1,3.0.0-SNAPSHOT)</version>
-			<type>lutece-plugin</type>
-		</dependency>
-	</dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>fr.paris.lutece</groupId>
+            <artifactId>lutece-core</artifactId>
+            <version>[3.0.0,)</version>
+            <type>lutece-core</type>
+        </dependency>
+        <dependency>
+            <groupId>fr.paris.lutece.plugins</groupId>
+            <artifactId>plugin-helpdesk</artifactId>
+            <version>[2.1.3,3.0.0-SNAPSHOT)</version>
+            <type>lutece-plugin</type>
+        </dependency>
+        <dependency>
+            <groupId>fr.paris.lutece.plugins</groupId>
+            <artifactId>plugin-solr</artifactId>
+            <version>[2.1.1,3.0.0-SNAPSHOT)</version>
+            <type>lutece-plugin</type>
+        </dependency>
+    </dependencies>
 
-	<properties>
-		<componentName>Module Helpdesk Solr</componentName>
-		<jiraProjectName>HELPDESKSOLR</jiraProjectName>
-		<jiraComponentId>10514</jiraComponentId>
-	</properties>
+    <properties>
+        <componentName>Module Helpdesk Solr</componentName>
+        <jiraProjectName>HELPDESKSOLR</jiraProjectName>
+        <jiraComponentId>10514</jiraComponentId>
+    </properties>
+    
     <scm>
-        <connection>scm:svn:http://dev.lutece.paris.fr/svn/lutece/portal/trunk/plugins/collaboration/module-helpdesk-solr</connection>
-        <developerConnection>scm:svn:https://dev.lutece.paris.fr/svn/lutece/portal/trunk/plugins/collaboration/module-helpdesk-solr</developerConnection>
-        <url>http://dev.lutece.paris.fr/viewvc/lutece/portal/trunk/plugins/collaboration/module-helpdesk-solr</url>
+        <connection>scm:git:https://github.com/lutece-platform/lutece-collab-module-helpdesk-solr.git</connection>
+        <developerConnection>scm:git:https://github.com/lutece-platform/lutece-collab-module-helpdesk-solr.git</developerConnection>
+        <url>https://github.com/lutece-platform/lutece-collab-module-helpdesk-solr.git</url>
     </scm>
+    
 </project>
