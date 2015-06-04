@@ -40,13 +40,13 @@
         <dependency>
             <groupId>fr.paris.lutece.plugins</groupId>
             <artifactId>plugin-helpdesk</artifactId>
-            <version>[2.1.3,3.0.0-SNAPSHOT)</version>
+            <version>[2.1.3,)</version>
             <type>lutece-plugin</type>
         </dependency>
         <dependency>
             <groupId>fr.paris.lutece.plugins</groupId>
             <artifactId>plugin-solr</artifactId>
-            <version>[2.1.1,3.0.0-SNAPSHOT)</version>
+            <version>[2.1.1,)</version>
             <type>lutece-plugin</type>
         </dependency>
     </dependencies>
