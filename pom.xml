@@ -10,7 +10,7 @@
     <groupId>fr.paris.lutece.plugins</groupId>
     <artifactId>module-helpdesk-solr</artifactId>
     <packaging>lutece-plugin</packaging>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.1</version>
     <name>Lutece helpdesk solr module</name>
 
     <repositories>
@@ -61,7 +61,7 @@
         <connection>scm:git:https://github.com/lutece-platform/lutece-collab-module-helpdesk-solr.git</connection>
         <developerConnection>scm:git:https://github.com/lutece-platform/lutece-collab-module-helpdesk-solr.git</developerConnection>
         <url>https://github.com/lutece-platform/lutece-collab-module-helpdesk-solr.git</url>
-      <tag>HEAD</tag>
+      <tag>lutece-collab-module-helpdesk-solr-1.1.1</tag>
   </scm>
     
 </project>
