@@ -33,16 +33,17 @@
  */
 package fr.paris.lutece.plugins.helpdesk.modules.solr.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 
 /**
  *
  * HelpdeskSolrService
  *
  */
+@ApplicationScoped
 public class HelpdeskSolrService
 {
-    private static HelpdeskSolrService _singleton = new HelpdeskSolrService(  );
-
     /**
     * Initialize the Helpdesk Solr service
     *
@@ -50,15 +51,5 @@ public class HelpdeskSolrService
     public void init(  )
     {
         //TODO subscribe to SolrService
-    }
-
-    /**
-     * Returns the instance of the singleton
-     *
-     * @return The instance of the singleton
-     */
-    public static HelpdeskSolrService getInstance(  )
-    {
-        return _singleton;
     }
 }
