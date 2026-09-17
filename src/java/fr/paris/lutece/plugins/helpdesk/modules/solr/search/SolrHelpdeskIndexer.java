@@ -33,24 +33,12 @@
  */
 package fr.paris.lutece.plugins.helpdesk.modules.solr.search;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.html.HtmlParser;
-import org.apache.tika.sax.BodyContentHandler;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
+import org.apache.commons.lang3.StringUtils;
 
 import fr.paris.lutece.plugins.helpdesk.business.Faq;
 import fr.paris.lutece.plugins.helpdesk.business.FaqHome;
@@ -66,18 +54,21 @@ import fr.paris.lutece.plugins.search.solr.indexer.SolrIndexer;
 import fr.paris.lutece.plugins.search.solr.indexer.SolrIndexerService;
 import fr.paris.lutece.plugins.search.solr.indexer.SolrItem;
 import fr.paris.lutece.plugins.search.solr.util.SolrConstants;
+import fr.paris.lutece.plugins.search.solr.util.SolrHtmlParserUtil;
 import fr.paris.lutece.portal.service.content.XPageAppService;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.util.url.UrlItem;
+import jakarta.enterprise.context.ApplicationScoped;
 
 
 /**
  * The Helpdesk indexer for Solr search platform
  *
  */
+@ApplicationScoped
 public class SolrHelpdeskIndexer implements SolrIndexer
 {
     private static final String PROPERTY_DESCRIPTION = "helpdesk-solr.indexer.description";
@@ -96,10 +87,9 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     // Site name
     private static final List<String> LIST_RESSOURCES_NAME = new ArrayList<String>(  );
     private static final String SUBJECT_INDEXATION_ERROR = "An error occured during the indexation of the subject number ";
-    
-    public SolrHelpdeskIndexer(  )
+
+    static
     {
-        super(  );
         LIST_RESSOURCES_NAME.add( HelpdeskIndexerUtils.CONSTANT_QUESTION_ANSWER_TYPE_RESOURCE );
         LIST_RESSOURCES_NAME.add( HelpdeskIndexerUtils.CONSTANT_SUBJECT_TYPE_RESOURCE );
     }
@@ -107,6 +97,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getDescription(  )
     {
         return AppPropertiesService.getProperty( PROPERTY_DESCRIPTION );
@@ -115,6 +106,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName(  )
     {
         return AppPropertiesService.getProperty( PROPERTY_NAME );
@@ -123,6 +115,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getVersion(  )
     {
         return AppPropertiesService.getProperty( PROPERTY_VERSION );
@@ -131,6 +124,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<String> indexDocuments(  )
     {
         Plugin plugin = PluginService.getPlugin( HelpdeskPlugin.PLUGIN_NAME );
@@ -139,7 +133,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         //FAQ
         for ( Faq faq : FaqHome.findAll( plugin ) )
         {
-        	for ( Subject subject : (Collection<Subject>) SubjectHome.getInstance(  ).findByIdFaq( faq.getId(  ), plugin ) )
+        	for ( Subject subject : (Collection<Subject>) SubjectHome.findByIdFaq( faq.getId(  ), plugin ) )
         	{
         		try
         		{
@@ -148,7 +142,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         		catch ( IOException e )
         		{
         			lstErrors.add( SolrIndexerService.buildErrorMessage( e ) );
-        			AppLogService.error( SUBJECT_INDEXATION_ERROR + subject.getId(  ), e );
+        			AppLogService.error( "{} {}", SUBJECT_INDEXATION_ERROR, subject.getId(  ), e );
         		}
         	}
         }
@@ -161,13 +155,14 @@ public class SolrHelpdeskIndexer implements SolrIndexer
      * @param strDocument id of the subject to index
      * @return The list of Solr items
      */
+    @Override
     public List<SolrItem> getDocuments( String strDocument )
     {
         List<SolrItem> listDocs = new ArrayList<SolrItem>(  );
         String strPortalUrl = SolrIndexerService.getBaseUrl(  );
         Plugin plugin = PluginService.getPlugin( HelpdeskPlugin.PLUGIN_NAME );
 
-        Subject subject = (Subject) SubjectHome.getInstance(  ).findByPrimaryKey( Integer.parseInt( strDocument ),
+        Subject subject = (Subject) SubjectHome.findByPrimaryKey( Integer.parseInt( strDocument ),
                 plugin );
 
         if ( subject != null )
@@ -182,7 +177,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
 
             while ( nIdParent != SubjectHome.FIRST_ORDER )
             {
-                parentSubject = (Subject) SubjectHome.getInstance(  ).findByPrimaryKey( nIdParent, plugin );
+                parentSubject = (Subject) SubjectHome.findByPrimaryKey( nIdParent, plugin );
                 nIdParent = parentSubject.getIdParent(  );
             }
 
@@ -231,6 +226,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isEnable(  )
     {
         return "true".equalsIgnoreCase( AppPropertiesService.getProperty( PROPERTY_INDEXER_ENABLE ) );
@@ -239,6 +235,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<Field> getAdditionalFields(  )
     {
         List<Field> fields = new ArrayList<Field>(  );
@@ -349,19 +346,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
         //Setting the Content field
         String strContentToIndex = getContentToIndex( questionAnswer, plugin );
 
-        HtmlParser parser = new HtmlParser(  );
-        ContentHandler handler = new BodyContentHandler();
-        Metadata metadata = new Metadata();
-        InputStream stream = new ByteArrayInputStream(strContentToIndex.getBytes(StandardCharsets.UTF_8));
-        try {
-			parser.parse(stream,  handler, metadata, new ParseContext());
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (TikaException e) {
-			e.printStackTrace();
-		}
-        
-        item.setContent( handler.toString(  ) );
+        item.setContent( SolrHtmlParserUtil.parseHtml( strContentToIndex ) );
 
         // Setting the Title field
         item.setTitle( questionAnswer.getQuestion(  ) );
@@ -401,20 +386,8 @@ public class SolrHelpdeskIndexer implements SolrIndexer
 
         //Setting the Content field
         String strContentToIndex = subject.getText(  );
-        
-        HtmlParser parser = new HtmlParser(  );
-        ContentHandler handler = new BodyContentHandler();
-        Metadata metadata = new Metadata();
-        InputStream stream = new ByteArrayInputStream(strContentToIndex.getBytes(StandardCharsets.UTF_8));
-        try {
-			parser.parse(stream,  handler, metadata, new ParseContext());
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (TikaException e) {
-			e.printStackTrace();
-		}
-        
-        item.setContent( strContentToIndex.toString(  ) );
+
+        item.setContent( SolrHtmlParserUtil.parseHtml( strContentToIndex ) );
 
         // Setting the Title field
         item.setTitle( subject.getText(  ) );
@@ -452,6 +425,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
          * {@inheritDoc}
          */
+    @Override
     public List<String> getResourcesName(  )
     {
         return LIST_RESSOURCES_NAME;
@@ -460,6 +434,7 @@ public class SolrHelpdeskIndexer implements SolrIndexer
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getResourceUid( String strResourceId, String strResourceType )
     {
         StringBuffer sb = new StringBuffer(  );

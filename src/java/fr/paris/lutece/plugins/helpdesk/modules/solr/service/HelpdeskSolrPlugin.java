@@ -34,6 +34,7 @@
 package fr.paris.lutece.plugins.helpdesk.modules.solr.service;
 
 import fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation;
+import jakarta.enterprise.inject.spi.CDI;
 
 
 /**
@@ -46,9 +47,10 @@ public class HelpdeskSolrPlugin extends PluginDefaultImplementation
     /**
      * Initialize the plugin helpdesk-solr
      */
+    @Override
     public void init(  )
     {
         // Initialize the HelpdeskSolr service
-        HelpdeskSolrService.getInstance(  ).init(  );
+        CDI.current( ).select( HelpdeskSolrService.class ).get( ).init(  );
     }
 }
